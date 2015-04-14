@@ -1,6 +1,8 @@
 import sys
+import socket
 from PySide.QtCore import *
 from PySide.QtGui import *
+from datetime import datetime
 
 
 class MainWindow(QWidget):
@@ -59,7 +61,8 @@ class MainWindow(QWidget):
 
 
     def execute(self):
-        self.chatting_log = self._enter_text.text() if self.chatting_log is '' else self.chatting_log + '\n' + self._enter_text.text()
+        curText = socket.gethostname() + ' ' + datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S') + ' :' + '\n' + self._enter_text.text()
+        self.chatting_log = curText + '\n' if self.chatting_log is '' else self.chatting_log + '\n' + curText + '\n'
         self._chatting_text.setText(self.chatting_log)
         self._enter_text.setText('')
         
