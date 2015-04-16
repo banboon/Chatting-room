@@ -90,6 +90,7 @@ int main(int argc, char** argv)
                   for (unsigned j = 0; j < clientSockets.size(); ++j)
                     {
                       if (clientSockets[j] < 0) continue;
+                      if(i == j) continue;
                       int wrote = write(clientSockets[j], buf, actual);
                       //cout << "Wrote " << wrote << " bytes to socket "
                       //     <<  clientSockets[i] << endl;
