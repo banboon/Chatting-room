@@ -19,7 +19,7 @@ vector<int> clientSockets;  // Maintains a collection of client socket numbers
 int main(int argc, char** argv)
 {
   struct sockaddr_in sockAddr;
-  sockAddr.sin_family = AF_INET;
+  sockAddr.sin_family = AF_UNSPEC;
   sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   unsigned short port = 2000; // Arbitrarily chosen port number
   if (argc > 1) port = atol(argv[1]); // Port from command line
