@@ -1,7 +1,4 @@
-import sys
-import socket
-import time
-from select import select
+import sys, socket, time, select
 
 
 # predefine the buffer size
@@ -41,6 +38,20 @@ def Init(host, port):
     return listenSock
 
 
+def Multicast(sockets, srcSockfd, data):
+    '''
+    Server forward data to all the other clients.
+    '''
+    for sock in sockets:
+        if sock is not srcSockfd:
+            try:
+                sock.sendall(data.encode())
+            except:
+                sock.close()
+                # sockets is shallow copy, so should be modified also in Server()
+                sockets.remove(sock)
+
+
 def Server(argv): 
     '''
     Main function
@@ -62,7 +73,7 @@ def Server(argv):
         error_list = []
         timeout = 1
 
-        ready_to_read, ready_to_write, in_error = select(read_list, write_list, error_list, timeout)
+        ready_to_read, ready_to_write, in_error = select.select(read_list, write_list, error_list, timeout)
 
         for sock in ready_to_read:
             if sock == listenSock:
@@ -73,17 +84,12 @@ def Server(argv):
                 try:
                     data = sock.recv(RECV_BUFFER)
                     if data:
-                        for it in client_sockets:
-                            if it != sock:
-                                try:
-                                    it.sendall(data)
-                                except:
-                                    it.close()
-                                    client_sockets.remove(it)
+                        Multicast(client_sockets, sock, data.decode())
                     else:
                         sock.close()
                         client_sockets.remove(sock)
                 except:
+                    sock.close()
                     continue
 
     listenSock.close()

@@ -1,24 +1,17 @@
 import sys, socket, select
 
 
-def client(argv):
-    if len(argv) < 2:
-        print("Usage: chat hostname")
-        sys.exit(1)
-
-    HOST = argv[1]
-    PORT = 9876
-
-    if len(argv) > 2: 
-        PORT = argv[2]  
-
+def SetupClient(host, port):
+    '''
+    Setup the client to connect the chat server.
+    '''
     mySockfd = None
     # get the address of the remoter server
-    res = socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC, socket.SOCK_STREAM)
+    res = socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM)
 
     # try to connect to the remote server
-    for one in res:
-        af, socktype, proto, canonname, sa = one
+    for it in res:
+        af, socktype, proto, canonname, sa = it
         try:
             mySockfd = socket.socket(af, socktype, proto)
         except OSError as msg:
@@ -35,6 +28,25 @@ def client(argv):
     if mySockfd is None:
         print('Unable to connect')
         sys.exit(2)
+
+    return mySockfd
+
+
+def Client(argv):
+    '''
+    Main function for client.
+    '''
+    if len(argv) < 2:
+        print("Usage: chat hostname")
+        sys.exit(1)
+
+    HOST = argv[1]
+    PORT = 9876
+
+    if len(argv) > 2: 
+        PORT = argv[2]  
+
+    mySockfd = SetupClient(HOST, PORT)
 
     print('Connected to chat server. You can start sending messages.')
     sys.stdout.write('[Me] ')
@@ -69,4 +81,4 @@ def client(argv):
 
 
 if __name__ == '__main__':
-    client(sys.argv)
+    Client(sys.argv)
