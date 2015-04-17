@@ -4,20 +4,18 @@ import time
 from select import select
 
 
+# predefine the buffer size
 RECV_BUFFER = 4096
 
 
-# create a socket project
-def server(argv):     
-    HOST = None     
-    PORT = 9876
-
-    if len(argv) > 1:
-        PORT = argv[1]
-
+def Init(host, port):
+    '''
+    Setup the server socket and listen on that socket
+    '''
     listenSock = None
-    res = socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC, socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
-
+    # get the address of the chat server
+    res = socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM, 0, socket.AI_PASSIVE)
+    
     for one in res:
         af, socktype, proto, canonname, sa = one
         try:
@@ -26,7 +24,9 @@ def server(argv):
             listenSock = None
             continue
         try:
+            # bind the address and port with the listen socket
             listenSock.bind(sa)
+            # listen on that socket
             listenSock.listen(5)
         except OSError as msg:
             listenSock.close()
@@ -38,39 +38,56 @@ def server(argv):
         print('could not open socket')
         sys.exit(1)
 
-    clientSockets = []
+    return listenSock
+
+
+def Server(argv): 
+    '''
+    Main function
+    '''    
+    HOST = None     
+    PORT = 9876
+
+    if len(argv) > 1:
+        PORT = argv[1]
+
+    # initiate the server socket
+    listenSock = Init(HOST, PORT)
+
+    client_sockets = []
 
     while True:
-        read_list = [listenSock] + clientSockets
+        read_list = [listenSock] + client_sockets
         write_list = []
         error_list = []
         timeout = 1
 
-        readable, writable, e = select(read_list, write_list, error_list, timeout)
+        ready_to_read, ready_to_write, in_error = select(read_list, write_list, error_list, timeout)
 
-        for sock in readable:
+        for sock in ready_to_read:
             if sock == listenSock:
-                clientSock, addr = listenSock.accept()
-                clientSockets.append(clientSock)
-
-        for it in clientSockets:
-            if it in read_list or it in error_list:
-                data = it.recv(RECV_BUFFER)
-                print(data)
-                if not data:
-                    it.close()
-                    clientSockets.remove(it)
-                else:
-                    for sock in clientSockets:
-                        if it != sock:
-                            try:
-                                sock.sendall(data)
-                            except:
-                                sock.close()
-                                clientSockets.remove(sock)
+                client_sock, client_addr = listenSock.accept()
+                client_sockets.append(client_sock)
+                print("Client (%s, %s) connected" % client_addr)
+            else:
+                try:
+                    data = sock.recv(RECV_BUFFER)
+                    if data:
+                        for it in client_sockets:
+                            if it != sock:
+                                try:
+                                    it.sendall(data)
+                                except:
+                                    it.close()
+                                    client_sockets.remove(it)
+                    else:
+                        sock.close()
+                        client_sockets.remove(sock)
+                except:
+                    continue
 
     listenSock.close()
 
 
 if __name__ == '__main__':
-    server(sys.argv)
+    Server(sys.argv)

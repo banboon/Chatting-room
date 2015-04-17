@@ -1,6 +1,4 @@
-import sys
-import socket
-from select import select
+import sys, socket, select
 
 
 def client(argv):
@@ -14,48 +12,60 @@ def client(argv):
     if len(argv) > 2: 
         PORT = argv[2]  
 
-    sockfd = None
+    mySockfd = None
+    # get the address of the remoter server
     res = socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC, socket.SOCK_STREAM)
 
+    # try to connect to the remote server
     for one in res:
         af, socktype, proto, canonname, sa = one
         try:
-            sockfd = socket.socket(af, socktype, proto)
+            mySockfd = socket.socket(af, socktype, proto)
         except OSError as msg:
-            sockfd = None
+            mySockfd = None
             continue
         try:
-            sockfd.connect(sa)
+            mySockfd.connect(sa)
         except OSError as msg:
-            sockfd.close()
-            sockfd = None
+            mySockfd.close()
+            mySockfd = None
             continue
         break
 
-    if sockfd is None:
-        print('could not open socket')
+    if mySockfd is None:
+        print('Unable to connect')
         sys.exit(2)
 
-    while True:
-        read_list = [sys.stdin, sockfd]
-        write_list = []
-        error_list = [sys.stdin, sockfd]
+    print('Connected to chat server. You can start sending messages.')
+    sys.stdout.write('[Me] ')
+    sys.stdout.flush()
 
-        ready_to_read, ready_to_write, in_error = select(read_list, write_list, error_list)
+    # set up the select list used for select
+    read_list = [sys.stdin, mySockfd]
+    write_list = []
+    error_list = [sys.stdin, mySockfd]
+
+    while True:
+        # Get the ready sockets or fileno
+        ready_to_read, ready_to_write, in_error = select.select(read_list, write_list, error_list)
 
         for it in ready_to_read:
-            if it is sockfd:
+            if it is mySockfd:
                 data = it.recv(4096)
                 if not data:
-                    print('Disconnect from server')
+                    print('Disconnect from the chat server')
                     sys.exit(3)
-                sys.stdout.write(data.decode('UTF-8'))
-                sys.stdout.flush()
+                else:
+                    sys.stdout.write(data.decode())
+                    sys.stdout.write('[Me] ')
+                    sys.stdout.flush()
             if it is sys.stdin:
                 data = sys.stdin.readline()
-                sockfd.sendall(bytes(data, 'UTF-8'))
+                mySockfd.sendall(data.encode())
+                sys.stdout.write('[Me] ')
+                sys.stdout.flush()
 
-    sockfd.close()
+    mySockfd.close()
 
 
 if __name__ == '__main__':
