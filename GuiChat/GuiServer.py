@@ -9,8 +9,10 @@ class ServerWindow(QWidget):
         super(ServerWindow, self).__init__()
         self.setupUi()
 
+        # Create a TCP server for chat room
         self.server = QTcpServer(self)
 
+        # list to store connected client sockets
         self.client_sockets = []
         self.server.newConnection.connect(self.newConnection)
 
@@ -46,6 +48,9 @@ class ServerWindow(QWidget):
 
     @Slot()    
     def start(self):
+        '''
+        When start button clicked, start listening on port.
+        '''
         if self.port_input.text():
             self.server.listen(QHostAddress('0.0.0.0'), int(self.port_input.text()))
 
@@ -60,6 +65,9 @@ class ServerWindow(QWidget):
 
     @Slot()
     def newConnection(self):
+        '''
+        When there is a new client connection, add the client socket into list.
+        '''
         client_sock = self.server.nextPendingConnection()
         client_sock.readyRead.connect(self.readyRead)
         self.client_sockets.append(client_sock)
@@ -67,6 +75,9 @@ class ServerWindow(QWidget):
 
     @Slot()
     def readyRead(self):
+        '''
+        When there is incoming data, read in the data and forward to other clients.
+        '''
         for sock in self.client_sockets:
             message = ''
             # while sock.canReadLine():
