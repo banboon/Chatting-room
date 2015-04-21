@@ -18,6 +18,7 @@ class ServerWindow(QWidget):
 
 
     def setupUi(self):
+        self.setWindowTitle('Chat Server')
         self.layout = QVBoxLayout()
 
         self.hlayout_1 = QHBoxLayout()
@@ -29,7 +30,12 @@ class ServerWindow(QWidget):
         self.port_input.setMaxLength(5)
         self.hlayout_1.addWidget(self.port_input)
 
+        self.hlayout_1.addStretch(1)
         self.layout.addLayout(self.hlayout_1)
+
+        self.connect_log = QTextEdit(self)
+        self.connect_log.setReadOnly(True)
+        self.layout.addWidget(self.connect_log)
 
         self.hlayout_2 = QHBoxLayout()
 
@@ -71,6 +77,8 @@ class ServerWindow(QWidget):
         client_sock = self.server.nextPendingConnection()
         client_sock.readyRead.connect(self.readyRead)
         self.client_sockets.append(client_sock)
+        text = 'Client (%s, %s) connected\n' % (client_sock.peerAddress().toString(), str(client_sock.peerPort()))
+        self.connect_log.setText(text)
 
 
     @Slot()

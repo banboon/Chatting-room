@@ -62,6 +62,7 @@ class MainWindow(QWidget):
 
         # Setup window for chatting history
         self._chatting_text = QTextEdit(self)
+        self._chatting_text.setReadOnly(True)
         self._chatting_text.setMinimumHeight(80)
         self._chatting_text.setStyleSheet('QTextEdit { font: 13px; } QTextEdit[class=invalid] { background-color: #FFCDCD; };')
 
