@@ -101,6 +101,7 @@ class MainWindow(QWidget):
         self.enter_text.setFocus()
 
 
+    @Slot()
     def on_loginButton_clicked(self):
         host = '127.0.0.1'
         port = 9876
@@ -118,12 +119,14 @@ class MainWindow(QWidget):
             event.ignore()
 
 
+    @Slot()
     def connected(self):
         self.chatting_log = 'Connected to chat server. You can start sending messages.\n\n'
         self._chatting_text.setText(self.chatting_log)
         self.enter_text.setFocus()
 
 
+    @Slot()
     def readyRead(self):
         while self.sock.canReadLine():
             line = self.sock.readLine()
