@@ -9,8 +9,10 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi()
+        # Create a socket
         self.sock = QTcpSocket(self)
 
+        # Setup signal for socket connected & incoming data
         self.sock.connected.connect(self.connected)
         self.sock.readyRead.connect(self.readyRead)
 
@@ -29,6 +31,8 @@ class MainWindow(QWidget):
         Add push button for GUI.
         '''
         new_button = QPushButton(name, self)
+        
+        # Setup signal for push button being clicked
         new_button.clicked.connect(conn_func)
         layout.addWidget(new_button)
         return new_button
@@ -89,7 +93,11 @@ class MainWindow(QWidget):
         self.show()
 
 
+    @Slot()
     def on_sayButton_clicked(self):
+        '''
+        When say button clicked, generate the message to be sent to chat server.
+        '''
         curText = socket.gethostname() + ' ' + datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S') + ' :' + '\n' + self.enter_text.text() + '\n\n'
         self.chatting_log = self.chatting_log + curText
         self._chatting_text.setText(self.chatting_log)
@@ -103,6 +111,9 @@ class MainWindow(QWidget):
 
     @Slot()
     def on_loginButton_clicked(self):
+        '''
+        When login button clicked, try to connect to chat server.
+        '''
         host = '127.0.0.1'
         port = 9876
         self.sock.connectToHost(host, port)
@@ -121,6 +132,9 @@ class MainWindow(QWidget):
 
     @Slot()
     def connected(self):
+        '''
+        When socket connected, show text in chat history box to inform user.
+        '''
         self.chatting_log = 'Connected to chat server. You can start sending messages.\n\n'
         self._chatting_text.setText(self.chatting_log)
         self.enter_text.setFocus()
@@ -128,6 +142,9 @@ class MainWindow(QWidget):
 
     @Slot()
     def readyRead(self):
+        '''
+        When there is incoming data, read the data.
+        '''
         while self.sock.canReadLine():
             line = self.sock.readLine()
             self.chatting_log = self.chatting_log + str(line)
