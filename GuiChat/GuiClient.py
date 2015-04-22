@@ -149,7 +149,6 @@ class MainWindow(QWidget):
         while self.sock.canReadLine():
             line = self.sock.readLine()
             self.chatting_log = self.chatting_log + str(line)
-        self.chatting_log = self.chatting_log
         self._chatting_text.setText(self.chatting_log)
 
 

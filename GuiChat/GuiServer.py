@@ -59,6 +59,8 @@ class ServerWindow(QWidget):
         '''
         if self.port_input.text():
             self.server.listen(QHostAddress('0.0.0.0'), int(self.port_input.text()))
+            text = "Start listening on port %s." % self.port_input.text()
+            self.connect_log.append(text)
 
 
     def closeEvent(self, event):
@@ -76,9 +78,16 @@ class ServerWindow(QWidget):
         '''
         client_sock = self.server.nextPendingConnection()
         client_sock.readyRead.connect(self.readyRead)
+        client_sock.disconnected.connect(self.clientDisconnect)
         self.client_sockets.append(client_sock)
-        text = 'Client (%s, %s) connected\n' % (client_sock.peerAddress().toString(), str(client_sock.peerPort()))
-        self.connect_log.setText(text)
+        
+        # Multicast to notify other clients the coming of the new user
+        message = 'Client (%s, %s) entered our chat room.\n\n' % (client_sock.peerAddress().toString(), str(client_sock.peerPort()))
+        self.multicast(client_sock, message)
+        
+        # Update the connection log
+        text = 'Client (%s, %s) connected.' % (client_sock.peerAddress().toString(), str(client_sock.peerPort()))
+        self.connect_log.append(text)
 
 
     @Slot()
@@ -87,20 +96,42 @@ class ServerWindow(QWidget):
         When there is incoming data, read in the data and forward to other clients.
         '''
         for sock in self.client_sockets:
-            message = ''
-            # while sock.canReadLine():
-            #     message = message + str(sock.readLine())
-            if sock.isReadable():
-                message = str(sock.readAll())
 
-            for other in self.client_sockets:
-                if other is not sock:
-                    other.write(message.encode())
+            if sock.isValid():            
+                message = ''
+                # while sock.canReadLine():
+                #     message = message + str(sock.readLine())
+                if sock.isReadable():
+                    message = str(sock.readAll())
+
+                for other in self.client_sockets:
+                    if other is not sock:
+                        other.write(message.encode())
+            else:
+                sock.close()
+                self.client_sockets.remove(sock)
 
 
     def run(self):
         self.show()
         #self.port_input.setFocus()
+
+
+    def multicast(self, sourceSock, message):
+        for sock in self.client_sockets:
+            if sock is not sourceSock:
+                sock.write(message.encode())
+
+
+    def clientDisconnect(self):
+        sender = self.sender()
+
+        # Update the connection log
+        text = 'Client (%s, %s) disconnected.' % (sender.peerAddress().toString(), str(sender.peerPort()))
+        self.connect_log.append(text)
+
+        sender.close()
+        self.client_sockets.remove(sender)
 
 
 def main(argv):
