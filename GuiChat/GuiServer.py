@@ -80,6 +80,13 @@ class ServerWindow(QWidget):
         client_sock.readyRead.connect(self.readyRead)
         client_sock.disconnected.connect(self.clientDisconnect)
         self.client_sockets.append(client_sock)
+
+        # send to all the clients the current user list
+        userList = 'User: \n'
+        for sock in self.client_sockets:
+            userList += '(%s, %s)\n' % (sock.peerAddress().toString(), str(sock.peerPort()))
+        for sock in self.client_sockets:
+            sock.write(userList.encode())
         
         # Multicast to notify other clients the coming of the new user
         message = 'Client (%s, %s) entered our chat room.\n' % (client_sock.peerAddress().toString(), str(client_sock.peerPort()))
@@ -104,9 +111,7 @@ class ServerWindow(QWidget):
             if sock.isReadable():
                 message = str(sock.readAll())
 
-            for other in self.client_sockets:
-                if other is not sock:
-                    other.write(message.encode())
+            self.multicast(sock, message)
         else:
             sock.close()
             self.client_sockets.remove(sock)
@@ -130,6 +135,14 @@ class ServerWindow(QWidget):
         # Update the connection log
         text = 'Client (%s, %s) disconnected.' % (sender.peerAddress().toString(), str(sender.peerPort()))
         self.connect_log.append(text)
+
+        # send to all the clients the current user list
+        userList = 'User: \n'
+        for sock in self.client_sockets:
+            if sock is not sender:
+                userList += '(%s, %s)\n' % (sock.peerAddress().toString(), str(sock.peerPort()))
+        for sock in self.client_sockets:
+            sock.write(userList.encode())
 
         message = 'Client (%s, %s) left our chat room.' % (sender.peerAddress().toString(), str(sender.peerPort()))
         self.multicast(sender, message)

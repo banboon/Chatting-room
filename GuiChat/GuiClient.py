@@ -60,13 +60,23 @@ class MainWindow(QWidget):
 
         self.layout.addLayout(self.hlayout_top)
 
+        self.hlayout_mid = QHBoxLayout()
+
         # Setup window for chatting history
         self._chatting_text = QTextEdit(self)
         self._chatting_text.setReadOnly(True)
         self._chatting_text.setMinimumHeight(80)
         self._chatting_text.setStyleSheet('QTextEdit { font: 13px; } QTextEdit[class=invalid] { background-color: #FFCDCD; };')
+        self.hlayout_mid.addWidget(self._chatting_text)
 
-        self.layout.addWidget(self._chatting_text)
+        # Setup window for user list
+        self.users_list = QTextEdit(self)
+        self.users_list.setReadOnly(True)
+        self.users_list.setStyleSheet('QTextEdit { font: 13px; } QTextEdit[class=invalid] { background-color: #FFCDCD; };')
+        self.users_list.setFixedWidth(200)
+        self.hlayout_mid.addWidget(self.users_list)
+
+        self.layout.addLayout(self.hlayout_mid)
 
         self.enter_label = self.AddLabel('Please enter: ', self.layout)
 
@@ -148,7 +158,17 @@ class MainWindow(QWidget):
         text = ''
         if self.sock.isReadable():
             text = str(self.sock.readAll())
-        self._chatting_text.append(text)
+
+        # seperate the user list message and client chat history messsage
+        if text.startswith('User: '):
+            if 'Client' in text:
+                text_l = text.split('Client')
+                self.users_list.setText(text_l[0])
+                self._chatting_text.append('Client' + text_l[1])
+            else:
+                self.users_list.setText(text)
+        else:
+            self._chatting_text.append(text)
 
 
 def main(argv):
