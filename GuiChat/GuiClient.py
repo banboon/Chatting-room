@@ -99,9 +99,8 @@ class MainWindow(QWidget):
         '''
         When say button clicked, generate the message to be sent to chat server.
         '''
-        curText = socket.gethostname() + ' ' + datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S') + ' :' + '\n' + self.enter_text.text() + '\n\n'
-        self.chatting_log = self.chatting_log + curText
-        self._chatting_text.setText(self.chatting_log)
+        curText = socket.gethostname() + ' ' + datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S') + ' :' + '\n' + self.enter_text.text() + '\n'
+        self._chatting_text.append(curText)
 
         if curText:
             self.sock.write(curText.encode())
@@ -136,8 +135,8 @@ class MainWindow(QWidget):
         '''
         When socket connected, show text in chat history box to inform user.
         '''
-        self.chatting_log = 'Connected to chat server. You can start sending messages.\n\n'
-        self._chatting_text.setText(self.chatting_log)
+        self.chatting_log = 'Connected to chat server. You can start sending messages.\n'
+        self._chatting_text.append(self.chatting_log)
         self.enter_text.setFocus()
 
 
@@ -146,10 +145,11 @@ class MainWindow(QWidget):
         '''
         When there is incoming data, read the data.
         '''
+        text = ''
         while self.sock.canReadLine():
             line = self.sock.readLine()
-            self.chatting_log = self.chatting_log + str(line)
-        self._chatting_text.setText(self.chatting_log)
+            text += str(line)
+        self._chatting_text.append(text)
 
 
 def main(argv):
