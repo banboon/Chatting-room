@@ -131,6 +131,9 @@ class ServerWindow(QWidget):
         text = 'Client (%s, %s) disconnected.' % (sender.peerAddress().toString(), str(sender.peerPort()))
         self.connect_log.append(text)
 
+        message = 'Client (%s, %s) left our chat room.' % (sender.peerAddress().toString(), str(sender.peerPort()))
+        self.multicast(sender, message)
+
         sender.close()
         self.client_sockets.remove(sender)
 

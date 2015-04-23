@@ -146,9 +146,8 @@ class MainWindow(QWidget):
         When there is incoming data, read the data.
         '''
         text = ''
-        while self.sock.canReadLine():
-            line = self.sock.readLine()
-            text += str(line)
+        if self.sock.isReadable():
+            text = str(self.sock.readAll())
         self._chatting_text.append(text)
 
 
